@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MM-Lab ห้องทดลองมัลติมีเดีย</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Kanit:wght@400;500;600&family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --surface-color: #ffffff;
+            --text-main: #1a1a24;
+            --text-muted: #5a5a6a;
+            --primary: #4361ee;
+            --primary-hover: #3a56d4;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --border: #e0e0e8;
+            --shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.03);
+            --radius: 12px;
+            --font-head: 'Kanit', sans-serif;
+            --font-body: 'Sarabun', sans-serif;
+            --font-mono: 'IBM Plex Mono', monospace;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121216;
+            --surface-color: #1e1e24;
+            --text-main: #e4e4eb;
+            --text-muted: #a0a0b0;
+            --primary: #5c7cfa;
+            --primary-hover: #4c6ef5;
+            --success: #2bd670;
+            --danger: #ff6b6b;
+            --border: #33333e;
+            --shadow: 0 4px 6px rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg-color: #121216;
+                --surface-color: #1e1e24;
+                --text-main: #e4e4eb;
+                --text-muted: #a0a0b0;
+                --primary: #5c7cfa;
+                --primary-hover: #4c6ef5;
+                --success: #2bd670;
+                --danger: #ff6b6b;
+                --border: #33333e;
+                --shadow: 0 4px 6px rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.1);
+            }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-width: 390px;
+        }
+        h1, h2, h3, h4, .tab-btn, .badge { font-family: var(--font-head); }
+        .mono { font-family: var(--font-mono); }
+        
+        /* Layout */
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        header {
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+            background: var(--surface-color); padding: 20px; border-radius: var(--radius);
+            box-shadow: var(--shadow); margin-bottom: 20px; gap: 15px;
+        }
+        .header-title h1 { font-size: 1.5rem; color: var(--primary); }
+        
+        /* Badges */
+        .badges-container { display: flex; gap: 10px; flex-wrap: wrap; }
+        .badge {
+            padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 500;
+            background: var(--border); color: var(--text-muted); display: flex; align-items: center; gap: 5px;
+            transition: all 0.3s;
+        }
+        .badge.earned { background: var(--success); color: #fff; box-shadow: 0 2px 8px rgba(46, 204, 113, 0.4); }
+        .badge.earned::before { content: "★"; }
+        .badge::before { content: "☆"; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            padding: 10px 20px; border: none; background: var(--surface-color); color: var(--text-muted);
+            border-radius: var(--radius); cursor: pointer; font-size: 1rem; font-weight: 500;
+            white-space: nowrap; transition: 0.2s; box-shadow: var(--shadow);
+        }
+        .tab-btn.active { background: var(--primary); color: #fff; }
+
+        /* Station Content */
+        .station { display: none; gap: 20px; animation: fadeIn 0.4s ease; }
+        .station.active { display: flex; flex-direction: column; }
+        @media (min-width: 768px) { .station.active { flex-direction: row; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .panel {
+            background: var(--surface-color); padding: 20px; border-radius: var(--radius);
+            box-shadow: var(--shadow); flex: 1; min-width: 0;
+        }
+        
+        .control-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 500; margin-bottom: 8px; font-family: var(--font-head); }
+        input[type="range"] {
+            width: 100%; height: 8px; background: var(--border); border-radius: 4px; outline: none;
+            -webkit-appearance: none; accent-color: var(--primary); margin: 10px 0;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%;
+            background: var(--primary); cursor: pointer;
+        }
+        input[type="color"] {
+            width: 100%; height: 40px; border: none; border-radius: 8px; cursor: pointer;
+            background: none; padding: 0;
+        }
+        select, input[type="number"] {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--bg-color); color: var(--text-main); font-family: var(--font-body);
+        }
+        .checkbox-label { display: flex; align-items: center; gap: 10px; font-weight: normal; cursor: pointer; }
+        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); }
+        
+        /* Specific Station Visuals */
+        .preview-box {
+            padding: 20px; border-radius: 8px; border: 1px solid var(--border);
+            margin-bottom: 20px; text-align: center; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: center; min-height: 150px;
+        }
+        canvas {
+            width: 100%; height: auto; background: #000; border-radius: 8px;
+            aspect-ratio: 16/9; display: block;
+        }
+        canvas.pixelated { image-rendering: pixelated; }
+
+        /* Status & Mission */
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .data-card { background: var(--bg-color); padding: 10px; border-radius: 8px; text-align: center; }
+        .data-value { font-size: 1.2rem; font-weight: bold; color: var(--primary); font-family: var(--font-mono); }
+        .data-label { font-size: 0.85rem; color: var(--text-muted); }
+        
+        .mission-box {
+            background: rgba(46, 204, 113, 0.1); border: 1px solid var(--success);
+            padding: 15px; border-radius: var(--radius); margin-top: 20px;
+            border-left: 5px solid var(--success); transition: 0.3s;
+        }
+        .mission-box.incomplete {
+            background: rgba(231, 76, 60, 0.1); border-color: var(--danger); border-left-color: var(--danger);
+        }
+        .mission-title { font-family: var(--font-head); font-weight: 600; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .status-badge { padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+        .status-pass { background: var(--success); color: white; }
+        .status-fail { background: var(--danger); color: white; }
+
+        /* Buttons & Utility */
+        button.btn {
+            background: var(--primary); color: white; border: none; padding: 12px 20px;
+            border-radius: 8px; cursor: pointer; font-family: var(--font-head); font-size: 1rem;
+            transition: 0.2s; width: 100%; margin-top: 10px;
+        }
+        button.btn:hover { background: var(--primary-hover); }
+        .quiz-item { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .quiz-option {
+            padding: 10px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+            transition: 0.2s; background: var(--bg-color); text-align: left;
+        }
+        .quiz-option:hover { border-color: var(--primary); }
+        .quiz-option.correct { background: rgba(46, 204, 113, 0.2); border-color: var(--success); }
+        .quiz-option.wrong { background: rgba(231, 76, 60, 0.2); border-color: var(--danger); }
+        .quiz-feedback { margin-top: 10px; font-size: 0.9rem; padding: 10px; border-radius: 8px; display: none; }
+        
+        .theme-toggle { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); }
+        footer { text-align: center; margin-top: 40px; padding: 20px; color: var(--text-muted); font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-title">
+            <h1>MM-Lab ห้องทดลองมัลติมีเดีย</h1>
+        </div>
+        <div class="badges-container" id="badges-container">
+            <div class="badge" id="badge-1">1: ข้อความ</div>
+            <div class="badge" id="badge-2">2: ภาพ</div>
+            <div class="badge" id="badge-3">3: เสียง</div>
+            <div class="badge" id="badge-4">4: วิดีโอ</div>
+            <div class="badge" id="badge-5">5: สรุป</div>
+        </div>
+        <button class="theme-toggle" id="theme-btn" title="สลับธีม">🌓</button>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-btn active" onclick="switchTab(1)">สถานี 1: สีและข้อความ</button>
+        <button class="tab-btn" onclick="switchTab(2)">สถานี 2: ภาพดิจิทัล</button>
+        <button class="tab-btn" onclick="switchTab(3)">สถานี 3: เสียงดิจิทัล</button>
+        <button class="tab-btn" onclick="switchTab(4)">สถานี 4: วิดีโอ</button>
+        <button class="tab-btn" onclick="switchTab(5)">สถานี 5: ภารกิจสรุป</button>
+    </nav>
+
+    <main>
+        <!-- Station 1 -->
+        <section id="station-1" class="station active">
+            <div class="panel">
+                <h2>ตัวควบคุม</h2>
+                <div class="control-group">
+                    <label>สีข้อความ (Text Color)</label>
+                    <input type="color" id="s1-color-text" value="#999999">
+                </div>
+                <div class="control-group">
+                    <label>สีพื้นหลัง (Background Color)</label>
+                    <input type="color" id="s1-color-bg" value="#ffffff">
+                </div>
+                <div class="control-group">
+                    <label>ขนาดข้อความ: <span id="s1-size-val">16</span> px</label>
+                    <input type="range" id="s1-size" min="12" max="40" value="16">
+                </div>
+                <div class="control-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="s1-bold"> ตัวหนา (Bold)
+                    </label>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>ผลลัพธ์</h2>
+                <div id="s1-preview" class="preview-box">
+                    <div id="s1-text">มัลติมีเดีย (Multimedia) คือการผสมผสานสื่อต่างๆ</div>
+                </div>
+                <div class="data-grid">
+                    <div class="data-card">
+                        <div class="data-label">อัตราส่วนความต่างสี (Contrast Ratio)</div>
+                        <div class="data-value" id="s1-ratio">1.00:1</div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-label">มาตรฐาน WCAG (AA)</div>
+                        <div class="data-value" id="s1-wcag">ไม่ผ่าน</div>
+                    </div>
+                </div>
+                <div class="mission-box incomplete" id="s1-mission">
+                    <div class="mission-title">
+                        <span>ภารกิจสถานี 1</span>
+                        <span class="status-badge status-fail" id="s1-status">ยังไม่ผ่าน</span>
+                    </div>
+                    <p>ปรับค่าให้ข้อความขนาด<strong>ไม่เกิน 18 px</strong> แบบ<strong>ตัวบาง</strong> มีความต่างสีผ่านเกณฑ์ (>= 4.5:1)</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Station 2 -->
+        <section id="station-2" class="station">
+            <div class="panel">
+                <h2>ตัวควบคุม</h2>
+                <div class="control-group">
+                    <label>ความละเอียดภาพ: <span id="s2-res-val">100</span>%</label>
+                    <input type="range" id="s2-res" min="3" max="100" value="100">
+                </div>
+                <div class="control-group">
+                    <label>ความลึกสี (บิตต่อช่องสี): <span id="s2-bit-val">8</span> bit</label>
+                    <input type="range" id="s2-bit" min="1" max="8" value="8">
+                </div>
+                <div class="data-grid" style="margin-top: 20px;">
+                    <div class="data-card">
+                        <div class="data-label">ขนาดภาพจริง</div>
+                        <div class="data-value" id="s2-dim">1280 x 720</div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-label">จำนวนสีที่เป็นไปได้</div>
+                        <div class="data-value" id="s2-colors">16.7M</div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>ภาพจำลอง (Canvas)</h2>
+                <canvas id="s2-canvas" width="1280" height="720" class="pixelated"></canvas>
+                <div class="data-grid" style="margin-top: 15px;">
+                    <div class="data-card" style="grid-column: span 2;">
+                        <div class="data-label">ขนาดข้อมูลดิบโดยประมาณ (Raw Size)</div>
+                        <div class="data-value" id="s2-size">2,764,800 Bytes</div>
+                    </div>
+                </div>
+                <div class="mission-box incomplete" id="s2-mission">
+                    <div class="mission-title">
+                        <span>ภารกิจสถานี 2</span>
+                        <span class="status-badge status-fail" id="s2-status">ยังไม่ผ่าน</span>
+                    </div>
+                    <p>ปรับให้ขนาดดิบ<strong>ต่ำกว่า 1 MB</strong> (1,048,576 ไบต์) โดยยังคงความลึกสี <strong>8 บิต</strong> และความกว้างภาพ<strong>ไม่ต่ำกว่า 640 px</strong></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Station 3 -->
+        <section id="station-3" class="station">
+            <div class="panel">
+                <h2>ตัวควบคุม</h2>
+                <div class="control-group">
+                    <label>อัตราการสุ่มตัวอย่าง (Sample Rate)</label>
+                    <select id="s3-rate">
+                        <option value="500">500 Hz</option>
+                        <option value="800">800 Hz</option>
+                        <option value="1000">1000 Hz</option>
+                        <option value="2000">2000 Hz</option>
+                        <option value="4000">4000 Hz</option>
+                        <option value="8000">8000 Hz</option>
+                        <option value="11025">11025 Hz</option>
+                        <option value="22050">22050 Hz</option>
+                        <option value="44100" selected>44100 Hz</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>ความลึกบิต (Bit Depth): <span id="s3-bit-val">16</span> bit</label>
+                    <input type="range" id="s3-bit" min="1" max="16" value="16">
+                </div>
+                <button class="btn" id="s3-play">▶ ทดสอบฟังเสียง 440 Hz (1 วินาที)</button>
+                <div id="s3-error" style="color: var(--danger); font-size: 0.85rem; margin-top: 10px;"></div>
+            </div>
+            <div class="panel">
+                <h2>กราฟคลื่นเสียง (2 คาบ)</h2>
+                <canvas id="s3-canvas" width="800" height="200"></canvas>
+                <div class="data-grid" style="margin-top: 15px;">
+                    <div class="data-card">
+                        <div class="data-label">เงื่อนไข Nyquist (>880 Hz)</div>
+                        <div class="data-value" id="s3-nyquist">ผ่าน</div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-label">ขนาดดิบ (Mono)</div>
+                        <div class="data-value" id="s3-size">86.1 KB/s</div>
+                    </div>
+                </div>
+                <div class="mission-box incomplete" id="s3-mission">
+                    <div class="mission-title">
+                        <span>ภารกิจสถานี 3</span>
+                        <span class="status-badge status-fail" id="s3-status">ยังไม่ผ่าน</span>
+                    </div>
+                    <p>ตั้งค่าให้<strong>ผ่านเงื่อนไข Nyquist</strong>, ความลึกบิต <strong>>= 8</strong>, และขนาดข้อมูล<strong>ไม่เกิน 20 KB/s</strong></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Station 4 -->
+        <section id="station-4" class="station">
+            <div class="panel">
+                <h2>ตัวควบคุม</h2>
+                <div class="control-group">
+                    <label>อัตราเฟรม (Frame Rate): <span id="s4-fps-val">60</span> FPS</label>
+                    <input type="range" id="s4-fps" min="2" max="60" value="60">
+                </div>
+                <div class="control-group">
+                    <label>อัตราการบีบอัดสมมติ (1:1 ถึง 300:1)</label>
+                    <input type="range" id="s4-ratio" min="1" max="300" value="1">
+                    <div style="text-align: right; font-family: var(--font-mono); font-size: 0.9rem;" id="s4-ratio-val">1:1</div>
+                </div>
+                <div class="data-grid" style="margin-top: 20px;">
+                    <div class="data-card">
+                        <div class="data-label">ข้อมูลดิบต่อเฟรม</div>
+                        <div class="data-value">2.76 MB</div>
+                        <div class="data-label" style="font-size: 0.7rem;">(1280x720x3 bytes)</div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-label">อัตราข้อมูลดิบ (Raw Bitrate)</div>
+                        <div class="data-value" id="s4-raw-bitrate">1327 Mbps</div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>ภาพเคลื่อนไหว</h2>
+                <canvas id="s4-canvas" width="640" height="240" style="background:#2c3e50;"></canvas>
+                <div class="data-grid" style="margin-top: 15px;">
+                    <div class="data-card" style="grid-column: span 2;">
+                        <div class="data-label">อัตราบิตหลังบีบอัด (Compressed Bitrate)</div>
+                        <div class="data-value" style="font-size: 1.5rem;" id="s4-comp-bitrate">1327.10 Mbit/s</div>
+                    </div>
+                </div>
+                <div class="mission-box incomplete" id="s4-mission">
+                    <div class="mission-title">
+                        <span>ภารกิจสถานี 4</span>
+                        <span class="status-badge status-fail" id="s4-status">ยังไม่ผ่าน</span>
+                    </div>
+                    <p>ปรับให้วิดีโอมีความลื่นไหล (<strong>>= 24 FPS</strong>) และบีบอัดจนแบนด์วิดท์<strong>ไม่เกิน 5 Mbit/s</strong></p>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 10px;">*หมายเหตุ: อัตราการบีบอัดเป็นค่าสมมติเพื่อการศึกษา ของจริงขึ้นอยู่กับ Codec เช่น H.264</p>
+            </div>
+        </section>
+
+        <!-- Station 5 -->
+        <section id="station-5" class="station">
+            <div class="panel" style="flex: unset; width: 100%;">
+                <h2>ประเมินความเข้าใจ</h2>
+                <div id="quiz-container">
+                    <!-- Quiz generated via JS -->
+                </div>
+                <div class="mission-box incomplete" id="s5-mission">
+                    <div class="mission-title">
+                        <span>ภารกิจสุดท้าย</span>
+                        <span class="status-badge status-fail" id="s5-status">ยังไม่ผ่าน</span>
+                    </div>
+                    <p>ตอบคำถามสถานการณ์ให้ถูกต้องทั้งหมดเพื่อรับตราสัญลักษณ์สุดท้าย</p>
+                </div>
+                <button class="btn" id="s5-retry" style="display:none; background: var(--text-muted);">ทำแบบทดสอบใหม่</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>พัฒนาสำหรับเรียนรู้องค์ประกอบมัลติมีเดียทางคอมพิวเตอร์ | สูตรคำนวณอ้างอิงตามทฤษฎีพื้นฐาน ค่าขนาดไฟล์เป็นค่าดิบที่ยังไม่รวม Header</p>
+    </footer>
+</div>
+
+<script>
+    // --- State & Utility ---
+    const state = {
+        badges: [false, false, false, false, false],
+        isReducedMotion: window.matchMedia(`(prefers-reduced-motion: reduce)`).matches === true
+    };
+
+    function loadProgress() {
+        try {
+            const saved = localStorage.getItem('mmlab-progress');
+            if (saved) {
+                state.badges = JSON.parse(saved);
+                updateBadgesUI();
+            }
+        } catch (e) { console.warn("Local storage error:", e); }
+    }
+
+    function saveProgress() {
+        try {
+            localStorage.setItem('mmlab-progress', JSON.stringify(state.badges));
+            updateBadgesUI();
+        } catch (e) {}
+    }
+
+    function completeMission(stationIndex) {
+        if (!state.badges[stationIndex - 1]) {
+            state.badges[stationIndex - 1] = true;
+            saveProgress();
+            
+            // UI Update for specific station
+            const missionBox = document.getElementById(`s${stationIndex}-mission`);
+            const statusBadge = document.getElementById(`s${stationIndex}-status`);
+            if(missionBox && statusBadge) {
+                missionBox.classList.remove('incomplete');
+                statusBadge.classList.remove('status-fail');
+                statusBadge.classList.add('status-pass');
+                statusBadge.textContent = "ผ่านแล้ว!";
+            }
+        }
+    }
+
+    function uncompleteMission(stationIndex) {
+        if (state.badges[stationIndex - 1]) {
+            state.badges[stationIndex - 1] = false;
+            saveProgress();
+            
+            const missionBox = document.getElementById(`s${stationIndex}-mission`);
+            const statusBadge = document.getElementById(`s${stationIndex}-status`);
+            if(missionBox && statusBadge) {
+                missionBox.classList.add('incomplete');
+                statusBadge.classList.remove('status-pass');
+                statusBadge.classList.add('status-fail');
+                statusBadge.textContent = "ยังไม่ผ่าน";
+            }
+        }
+    }
+
+    function updateBadgesUI() {
+        state.badges.forEach((earned, index) => {
+            const el = document.getElementById(`badge-${index + 1}`);
+            if (earned) { el.classList.add('earned'); } 
+            else { el.classList.remove('earned'); }
+        });
+    }
+
+    function switchTab(tabIndex) {
+        document.querySelectorAll('.station').forEach((el, idx) => {
+            el.classList.toggle('active', idx + 1 === tabIndex);
+        });
+        document.querySelectorAll('.tab-btn').forEach((el, idx) => {
+            el.classList.toggle('active', idx + 1 === tabIndex);
+        });
+        // Handle canvas redraws or animation stops based on tab
+        if (tabIndex === 4) { lastTime = performance.now(); requestAnimationFrame(drawVideoCanvas); }
+    }
+
+    // Theme Toggle
+    const themeBtn = document.getElementById('theme-btn');
+    themeBtn.addEventListener('click', () => {
+        const root = document.documentElement;
+        let currentTheme = root.getAttribute('data-theme');
+        if (!currentTheme) {
+            currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        root.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
+    // --- Format Utils ---
+    const numFmt = (num) => num.toLocaleString('en-US', {maximumFractionDigits: 2});
+
+    // --- Station 1: Text & Color ---
+    const elS1ColText = document.getElementById('s1-color-text');
+    const elS1ColBg = document.getElementById('s1-color-bg');
+    const elS1Size = document.getElementById('s1-size');
+    const elS1Bold = document.getElementById('s1-bold');
+    const elS1Preview = document.getElementById('s1-preview');
+    const elS1Text = document.getElementById('s1-text');
+    const elS1SizeVal = document.getElementById('s1-size-val');
+    const elS1Ratio = document.getElementById('s1-ratio');
+    const elS1Wcag = document.getElementById('s1-wcag');
+
+    function hexToRgb(hex) {
+        let r = parseInt(hex.slice(1, 3), 16),
+            g = parseInt(hex.slice(3, 5), 16),
+            b = parseInt(hex.slice(5, 7), 16);
+        return [r, g, b];
+    }
+
+    function getLuminance(r, g, b) {
+        let a = [r, g, b].map(function (v) {
+            v /= 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+    }
+
+    function updateS1() {
+        const textHex = elS1ColText.value;
+        const bgHex = elS1ColBg.value;
+        const size = parseInt(elS1Size.value);
+        const isBold = elS1Bold.checked;
+
+        elS1SizeVal.textContent = size;
+        elS1Preview.style.backgroundColor = bgHex;
+        elS1Text.style.color = textHex;
+        elS1Text.style.fontSize = size + 'px';
+        elS1Text.style.fontWeight = isBold ? 'bold' : 'normal';
+
+        const [r1, g1, b1] = hexToRgb(textHex);
+        const [r2, g2, b2] = hexToRgb(bgHex);
+        const l1 = getLuminance(r1, g1, b1);
+        const l2 = getLuminance(r2, g2, b2);
+        const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+        
+        elS1Ratio.textContent = ratio.toFixed(2) + ':1';
+
+        const isLarge = size >= 24 || (size >= 18.66 && isBold);
+        let passAA = false;
+        if (isLarge && ratio >= 3.0) passAA = true;
+        if (!isLarge && ratio >= 4.5) passAA = true;
+        let passAAA = (!isLarge && ratio >= 7.0) || (isLarge && ratio >= 4.5);
+
+        if (passAAA) elS1Wcag.innerHTML = '<span style="color:var(--success)">ผ่าน (AAA)</span>';
+        else if (passAA) elS1Wcag.innerHTML = '<span style="color:var(--success)">ผ่าน (AA)</span>';
+        else elS1Wcag.innerHTML = '<span style="color:var(--danger)">ไม่ผ่าน</span>';
+
+        // Check Mission 1
+        if (size <= 18 && !isBold && ratio >= 4.5) {
+            completeMission(1);
+        } else {
+            uncompleteMission(1);
+        }
+    }
+
+    [elS1ColText, elS1ColBg, elS1Size, elS1Bold].forEach(el => el.addEventListener('input', updateS1));
+
+    // --- Station 2: Digital Image ---
+    const s2Canvas = document.getElementById('s2-canvas');
+    const s2Ctx = s2Canvas.getContext('2d', { willReadFrequently: true });
+    
+    // Create an offscreen canvas to hold the pristine 1280x720 image
+    const osCanvas = document.createElement('canvas');
+    osCanvas.width = 1280; osCanvas.height = 720;
+    const osCtx = osCanvas.getContext('2d');
+
+    function drawBaseImage() {
+        // Sky
+        let grad = osCtx.createLinearGradient(0, 0, 0, 720);
+        grad.addColorStop(0, "#87CEEB"); grad.addColorStop(1, "#f4a460");
+        osCtx.fillStyle = grad; osCtx.fillRect(0, 0, 1280, 720);
+        
+        // Sun
+        osCtx.fillStyle = "#FFD700";
+        osCtx.beginPath(); osCtx.arc(900, 300, 100, 0, Math.PI*2); osCtx.fill();
+        
+        // Mountains
+        osCtx.fillStyle = "#2E8B57";
+        osCtx.beginPath(); osCtx.moveTo(0, 720); osCtx.lineTo(300, 300); osCtx.lineTo(700, 720); osCtx.fill();
+        osCtx.fillStyle = "#228B22";
+        osCtx.beginPath(); osCtx.moveTo(400, 720); osCtx.lineTo(800, 400); osCtx.lineTo(1280, 720); osCtx.fill();
+
+        // Details (Lines to show pixelation)
+        osCtx.strokeStyle = "#fff"; osCtx.lineWidth = 4;
+        for(let i=0; i<1280; i+=100) { osCtx.beginPath(); osCtx.moveTo(i, 600); osCtx.lineTo(i+50, 720); osCtx.stroke(); }
+    }
+    
+    // Draw base once
+    drawBaseImage();
+
+    const elS2Res = document.getElementById('s2-res');
+    const elS2Bit = document.getElementById('s2-bit');
+    const elS2Dim = document.getElementById('s2-dim');
+    const elS2Colors = document.getElementById('s2-colors');
+    const elS2Size = document.getElementById('s2-size');
+
+    let s2Timeout = null;
+    function updateS2() {
+        const resPercent = parseInt(elS2Res.value);
+        const bits = parseInt(elS2Bit.value);
+        
+        document.getElementById('s2-res-val').textContent = resPercent;
+        document.getElementById('s2-bit-val').textContent = bits;
+
+        const w = Math.round(1280 * (resPercent / 100));
+        const h = Math.round(720 * (resPercent / 100));
+        
+        elS2Dim.textContent = `${w} x ${h}`;
+        const totalColors = Math.pow(Math.pow(2, bits), 3);
+        elS2Colors.textContent = totalColors >= 1000000 ? (totalColors/1000000).toFixed(1) + 'M' : totalColors.toLocaleString();
+        
+        // Size = W * H * (Bits per channel * 3 channels) / 8
+        const bytes = Math.round(w * h * (bits * 3) / 8);
+        elS2Size.textContent = `${bytes.toLocaleString()} Bytes`;
+
+        // Mission 2 check
+        if (bytes < 1048576 && bits === 8 && w >= 640) completeMission(2);
+        else uncompleteMission(2);
+
+        // Graphics Update (Debounced to prevent lag on slider)
+        clearTimeout(s2Timeout);
+        s2Timeout = setTimeout(() => processImage(w, h, bits), 50);
+    }
+
+    function processImage(w, h, bits) {
+        // 1. Draw downscaled to temp
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = w || 1; tempCanvas.height = h || 1;
+        const tCtx = tempCanvas.getContext('2d');
+        tCtx.imageSmoothingEnabled = true;
+        tCtx.drawImage(osCanvas, 0, 0, w || 1, h || 1);
+
+        // 2. Quantize colors
+        if(bits < 8 && w > 0 && h > 0) {
+            const imgData = tCtx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+            const levels = Math.pow(2, bits);
+            const factor = 255 / (levels - 1);
+            for (let i = 0; i < data.length; i += 4) {
+                data[i]   = Math.round(Math.round(data[i] / 255 * (levels-1)) * factor);
+                data[i+1] = Math.round(Math.round(data[i+1] / 255 * (levels-1)) * factor);
+                data[i+2] = Math.round(Math.round(data[i+2] / 255 * (levels-1)) * factor);
+            }
+            tCtx.putImageData(imgData, 0, 0);
+        }
+
+        // 3. Draw to display canvas scaled up (pixelated)
+        s2Ctx.imageSmoothingEnabled = false; // Nearest neighbor
+        s2Ctx.clearRect(0,0, 1280, 720);
+        s2Ctx.drawImage(tempCanvas, 0, 0, 1280, 720);
+    }
+
+    [elS2Res, elS2Bit].forEach(el => el.addEventListener('input', updateS2));
+
+    // --- Station 3: Audio ---
+    const s3Canvas = document.getElementById('s3-canvas');
+    const s3Ctx = s3Canvas.getContext('2d');
+    const elS3Rate = document.getElementById('s3-rate');
+    const elS3Bit = document.getElementById('s3-bit');
+    const elS3Play = document.getElementById('s3-play');
+    const elS3Err = document.getElementById('s3-error');
+
+    function updateS3() {
+        const rate = parseInt(elS3Rate.value);
+        const bits = parseInt(elS3Bit.value);
+        document.getElementById('s3-bit-val').textContent = bits;
+
+        // Math
+        const nyquistPass = rate > 880; // 440 * 2
+        const nyqEl = document.getElementById('s3-nyquist');
+        nyqEl.textContent = nyquistPass ? "ผ่าน" : "ไม่ผ่าน";
+        nyqEl.style.color = nyquistPass ? "var(--success)" : "var(--danger)";
+
+        const bytesPerSec = (rate * bits) / 8;
+        const kbPerSec = bytesPerSec / 1024;
+        document.getElementById('s3-size').textContent = `${kbPerSec.toFixed(1)} KB/s`;
+
+        // Mission 3
+        if (nyquistPass && bits >= 8 && kbPerSec <= 20) completeMission(3);
+        else uncompleteMission(3);
+
+        drawWave(rate, bits);
+    }
+
+    function drawWave(rate, bits) {
+        const w = s3Canvas.width; const h = s3Canvas.height;
+        s3Ctx.clearRect(0, 0, w, h);
+        
+        // Draw grid
+        s3Ctx.strokeStyle = "rgba(100,100,100,0.2)"; s3Ctx.beginPath();
+        s3Ctx.moveTo(0, h/2); s3Ctx.lineTo(w, h/2); s3Ctx.stroke();
+
+        const freq = 440;
+        const duration = 2 / freq; // 2 cycles
+        const levels = Math.pow(2, bits);
+        const points = Math.floor(rate * duration);
+
+        // Draw original
+        s3Ctx.strokeStyle = "rgba(150,150,150,0.5)"; s3Ctx.lineWidth = 1;
+        s3Ctx.beginPath();
+        for(let x=0; x<w; x++) {
+            let t = (x / w) * duration;
+            let val = Math.sin(2 * Math.PI * freq * t);
+            let y = h/2 - (val * (h/2 - 10));
+            if(x===0) s3Ctx.moveTo(x,y); else s3Ctx.lineTo(x,y);
+        }
+        s3Ctx.stroke();
+
+        // Draw quantized step function
+        if (points > 0 && points < 200) { // Limit points so it doesn't just look like a solid block
+            s3Ctx.strokeStyle = "var(--primary)"; s3Ctx.lineWidth = 2;
+            s3Ctx.beginPath();
+            let stepW = w / points;
+            for(let i=0; i<points; i++) {
+                let t = i / rate;
+                let val = Math.sin(2 * Math.PI * freq * t);
+                // Quantize
+                let qVal = Math.round(val * (levels/2 - 1)) / (levels/2 - 1);
+                let y = h/2 - (qVal * (h/2 - 10));
+                let x = i * stepW;
+                
+                if(i===0) s3Ctx.moveTo(x, y);
+                else s3Ctx.lineTo(x, y); // vertical line to step
+                s3Ctx.lineTo(x + stepW, y); // horizontal step
+                
+                // Draw dot
+                s3Ctx.fillStyle = "var(--danger)";
+                s3Ctx.fillRect(x-2, y-2, 4, 4);
+            }
+            s3Ctx.stroke();
+        } else {
+            // Too many points, just draw the quantized line
+            s3Ctx.strokeStyle = "var(--primary)"; s3Ctx.lineWidth = 2;
+            s3Ctx.beginPath();
+            for(let x=0; x<w; x++) {
+                let t = (x / w) * duration;
+                let sampleIndex = Math.floor(t * rate);
+                let actT = sampleIndex / rate;
+                let val = Math.sin(2 * Math.PI * freq * actT);
+                let qVal = Math.round(val * (levels/2 - 1)) / (levels/2 - 1);
+                let y = h/2 - (qVal * (h/2 - 10));
+                if(x===0) s3Ctx.moveTo(x,y); else s3Ctx.lineTo(x,y);
+            }
+            s3Ctx.stroke();
+        }
+    }
+
+    let audioCtx = null;
+    elS3Play.addEventListener('click', () => {
+        const rate = parseInt(elS3Rate.value);
+        const bits = parseInt(elS3Bit.value);
+        elS3Err.textContent = "";
+
+        if (rate < 8000) {
+            elS3Err.textContent = "เบราว์เซอร์มักไม่รองรับ Sample Rate ต่ำกว่า 8000 Hz ในการเล่นจริง";
+            return;
+        }
+
+        try {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const frameCount = rate * 1; // 1 second
+            const myArrayBuffer = audioCtx.createBuffer(1, frameCount, rate);
+            const nowBuffering = myArrayBuffer.getChannelData(0);
+            const freq = 440;
+            const levels = Math.pow(2, bits);
+            
+            for (let i = 0; i < frameCount; i++) {
+                let t = i / rate;
+                let val = Math.sin(2 * Math.PI * freq * t);
+                let qVal = Math.round(val * (levels/2 - 1)) / (levels/2 - 1);
+                nowBuffering[i] = qVal * 0.1; // Volume scaled down
+            }
+
+            const source = audioCtx.createBufferSource();
+            source.buffer = myArrayBuffer;
+            source.connect(audioCtx.destination);
+            source.start();
+        } catch (e) {
+            elS3Err.textContent = "เกิดข้อผิดพลาดในการเล่นเสียง: " + e.message;
+        }
+    });
+
+    [elS3Rate, elS3Bit].forEach(el => el.addEventListener('change', updateS3));
+    [elS3Rate, elS3Bit].forEach(el => el.addEventListener('input', updateS3)); // for slider
+
+    // --- Station 4: Video ---
+    const s4Canvas = document.getElementById('s4-canvas');
+    const s4Ctx = s4Canvas.getContext('2d');
+    const elS4Fps = document.getElementById('s4-fps');
+    const elS4Ratio = document.getElementById('s4-ratio');
+    
+    let ballX = 50, ballY = 50, dx = 200, dy = 150; // pos, velocity/sec
+    let lastTime = 0, accumulator = 0;
+
+    function updateS4Math() {
+        const fps = parseInt(elS4Fps.value);
+        const ratio = parseInt(elS4Ratio.value);
+        document.getElementById('s4-fps-val').textContent = fps;
+        document.getElementById('s4-ratio-val').textContent = `1:${ratio}`;
+
+        const rawFrameBytes = 1280 * 720 * 3;
+        const rawBitsPerSec = rawFrameBytes * fps * 8;
+        const compBitsPerSec = rawBitsPerSec / ratio;
+
+        document.getElementById('s4-raw-bitrate').textContent = (rawBitsPerSec / 1000000).toFixed(0) + ' Mbps';
+        document.getElementById('s4-comp-bitrate').textContent = (compBitsPerSec / 1000000).toFixed(2) + ' Mbit/s';
+
+        if (fps >= 24 && compBitsPerSec <= 5000000) completeMission(4);
+        else uncompleteMission(4);
+    }
+
+    function drawVideoCanvas(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        let delta = timestamp - lastTime;
+        lastTime = timestamp;
+
+        if(state.isReducedMotion) {
+            // Static draw for accessibility
+            s4Ctx.clearRect(0, 0, 640, 240);
+            s4Ctx.fillStyle = "var(--primary)";
+            s4Ctx.beginPath(); s4Ctx.arc(320, 120, 20, 0, Math.PI*2); s4Ctx.fill();
+            s4Ctx.fillStyle = "white"; s4Ctx.font = "16px sans-serif";
+            s4Ctx.fillText("Reduced Motion Enabled", 10, 20);
+            return; // Stop animation loop
+        }
+
+        const fps = parseInt(elS4Fps.value);
+        const frameInterval = 1000 / fps;
+        
+        accumulator += delta;
+
+        // Logic update based on delta (smooth regardless of FPS)
+        let deltaSec = delta / 1000;
+        ballX += dx * deltaSec;
+        ballY += dy * deltaSec;
+        if (ballX < 20 || ballX > 620) dx = -dx;
+        if (ballY < 20 || ballY > 220) dy = -dy;
+        // Clamp position to avoid getting stuck
+        ballX = Math.max(20, Math.min(620, ballX));
+        ballY = Math.max(20, Math.min(220, ballY));
+
+        // Render based on chosen FPS
+        if (accumulator >= frameInterval) {
+            accumulator = accumulator % frameInterval; // keep remainder
+            
+            s4Ctx.clearRect(0, 0, 640, 240);
+            // Trail effect
+            s4Ctx.fillStyle = "rgba(44, 62, 80, 0.3)";
+            s4Ctx.fillRect(0,0,640,240);
+
+            s4Ctx.fillStyle = "var(--success)";
+            s4Ctx.beginPath();
+            s4Ctx.arc(ballX, ballY, 20, 0, Math.PI*2);
+            s4Ctx.fill();
+
+            // Text
+            s4Ctx.fillStyle = "white";
+            s4Ctx.font = "14px monospace";
+            s4Ctx.fillText(`Simulation time: ${(timestamp/1000).toFixed(1)}s`, 10, 20);
+            s4Ctx.fillText(`Drawing at: ${fps} FPS`, 10, 40);
+        }
+
+        // Only continue if tab is active to save resources
+        if (document.getElementById('station-4').classList.contains('active')) {
+            requestAnimationFrame(drawVideoCanvas);
+        }
+    }
+
+    [elS4Fps, elS4Ratio].forEach(el => el.addEventListener('input', updateS4Math));
+
+
+    // --- Station 5: Quiz ---
+    const quizData = [
+        {
+            q: "หากต้องการสร้างสื่อให้ผู้เรียนเห็นการเปลี่ยนแปลงของสีทันทีเมื่อปรับค่า สื่อประเภทใดเหมาะสมที่สุด?",
+            opts: ["ข้อความอธิบาย (Text)", "ภาพกราฟิกนิ่ง (Image)", "สื่อเชิงโต้ตอบ (Interactive)", "วิดีโอ (Video)"],
+            ans: 2,
+            exp: "สื่อเชิงโต้ตอบช่วยให้ผู้เรียนลงมือทำและเห็นผลลัพธ์ (Cause and effect) ได้ทันที ซึ่งดีกว่าการอ่านหรือดูเพียงอย่างเดียว"
+        },
+        {
+            q: "ถ้าภาพดิจิทัลมีอาการแตกเป็นสี่เหลี่ยม (Pixelated) อย่างเห็นได้ชัด เกิดจากสาเหตุใด?",
+            opts: ["ความลึกสี (Bit Depth) ต่ำเกินไป", "ความละเอียด (Resolution) ต่ำเกินไป", "ตั้งค่าอัตราเฟรมผิด", "อัตราสุ่มตัวอย่างเสียงผิดพลาด"],
+            ans: 1,
+            exp: "ความละเอียด (กว้าง x สูง) ที่ต่ำเกินไปทำให้แต่ละพิกเซลมีขนาดใหญ่ขึ้นเมื่อนำมาแสดงผล ส่วนความลึกสีต่ำจะทำให้สีดูเป็นชั้นๆ ไม่ใช่แตกเป็นพิกเซล"
+        },
+        {
+            q: "ตามทฤษฎี Nyquist หากเราต้องการบันทึกเสียงที่มีความถี่สูงสุด 10,000 Hz ต้องใช้อัตราการสุ่มตัวอย่าง (Sample Rate) อย่างน้อยเท่าไร?",
+            opts: ["5,000 Hz", "10,000 Hz", "20,001 Hz", "44,100 Hz"],
+            ans: 2,
+            exp: "Nyquist Rate ต้องมากกว่า 2 เท่าของความถี่สูงสุดในสัญญาณ (2 x 10,000 = 20,000) ดังนั้นต้องใช้อย่างน้อย 20,001 Hz"
+        },
+        {
+            q: "ข้อความสีเทาอ่อนบนพื้นสีขาว คำนวณอัตราส่วนความต่างสีได้ 2.3:1 ผลลัพธ์นี้บอกอะไรเรา?",
+            opts: ["ผ่านเกณฑ์ WCAG ระดับ AAA", "อ่านง่ายมาก เหมาะสำหรับทุกคน", "ไม่ผ่านเกณฑ์ขั้นต่ำ (AA) ทำให้คนทั่วไปอ่านยาก", "ไฟล์จะมีขนาดใหญ่กว่าปกติ"],
+            ans: 2,
+            exp: "เกณฑ์ขั้นต่ำ (AA) สำหรับข้อความปกติคือ 4.5:1 ดังนั้น 2.3:1 จึงไม่ผ่านเกณฑ์และส่งผลเสียต่อความสามารถในการเข้าถึง"
+        },
+        {
+            q: "ทำไมเราจึงต้องใช้อัลกอริทึมในการบีบอัดวิดีโอ (Video Compression)?",
+            opts: ["เพื่อเพิ่มความคมชัดให้สูงกว่าต้นฉบับ", "เพื่อให้ขนาดข้อมูลดิบมีขนาดใหญ่ขึ้น", "เพื่อลดแบนด์วิดท์และพื้นที่จัดเก็บข้อมูล", "เพื่อเพิ่มอัตราเฟรมเรตให้วิดีโอลื่นขึ้น"],
+            ans: 2,
+            exp: "วิดีโอที่ไม่มีการบีบอัด (Raw video) มีขนาดมหาศาลมาก การบีบอัดช่วยให้เราสามารถสตรีมหรือจัดเก็บวิดีโอในพื้นที่ที่จำกัดได้"
+        }
+    ];
+
+    let quizAnswers = new Array(quizData.length).fill(null);
+
+    function renderQuiz() {
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = '';
+        quizData.forEach((item, qIdx) => {
+            let div = document.createElement('div');
+            div.className = 'quiz-item';
+            div.innerHTML = `<p><strong>ข้อ ${qIdx + 1}:</strong> ${item.q}</p><div class="quiz-options"></div>
+                             <div class="quiz-feedback" id="feedback-${qIdx}"></div>`;
+            const optContainer = div.querySelector('.quiz-options');
+            
+            item.opts.forEach((optText, oIdx) => {
+                let btn = document.createElement('div');
+                btn.className = 'quiz-option';
+                btn.textContent = optText;
+                btn.onclick = () => selectAnswer(qIdx, oIdx, btn);
+                optContainer.appendChild(btn);
+            });
+            container.appendChild(div);
+        });
+    }
+
+    function selectAnswer(qIdx, oIdx, btnEl) {
+        if (state.badges[4]) return; // locked if passed
+        if (quizAnswers[qIdx] !== null) return; // already answered
+
+        const opts = btnEl.parentElement.querySelectorAll('.quiz-option');
+        const feedback = document.getElementById(`feedback-${qIdx}`);
+        
+        quizAnswers[qIdx] = oIdx;
+        const isCorrect = (oIdx === quizData[qIdx].ans);
+        
+        opts[oIdx].classList.add(isCorrect ? 'correct' : 'wrong');
+        opts[quizData[qIdx].ans].classList.add('correct'); // show correct
+
+        feedback.style.display = 'block';
+        feedback.style.backgroundColor = isCorrect ? 'rgba(46,204,113,0.1)' : 'rgba(231,76,60,0.1)';
+        feedback.innerHTML = `<strong>${isCorrect ? 'ถูกต้อง!' : 'ผิดพลาด:'}</strong> ${quizData[qIdx].exp}`;
+
+        checkQuizComplete();
+    }
+
+    function checkQuizComplete() {
+        if (quizAnswers.includes(null)) return;
+        const allCorrect = quizAnswers.every((ans, idx) => ans === quizData[idx].ans);
+        if (allCorrect) {
+            completeMission(5);
+        } else {
+            document.getElementById('s5-retry').style.display = 'block';
+        }
+    }
+
+    document.getElementById('s5-retry').addEventListener('click', () => {
+        quizAnswers.fill(null);
+        renderQuiz();
+        document.getElementById('s5-retry').style.display = 'none';
+        uncompleteMission(5);
+    });
+
+    // --- Init ---
+    window.onload = () => {
+        loadProgress();
+        updateS1();
+        updateS2();
+        updateS3();
+        updateS4Math();
+        renderQuiz();
+        
+        // Initial setup for UI elements based on state
+        for(let i=1; i<=5; i++){
+            if(state.badges[i-1]){
+                const mb = document.getElementById(`s${i}-mission`);
+                const sb = document.getElementById(`s${i}-status`);
+                if(mb) mb.classList.remove('incomplete');
+                if(sb) { sb.classList.remove('status-fail'); sb.classList.add('status-pass'); sb.textContent = "ผ่านแล้ว!"; }
+            }
+        }
+    };
+
+</script>
+</body>
+</html>
